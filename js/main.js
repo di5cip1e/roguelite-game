@@ -13,6 +13,7 @@ import { initMapSystem, travelToLocation, selectPath } from './systems/map.js';
 import { initSettings } from './systems/settings.js';
 
 // --- Import UI Modules ---
+// THIS LINE IS NOW FIXED
 import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from './ui.js';
 
 // --- Global Function Exposure ---
