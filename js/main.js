@@ -4,7 +4,8 @@
 
 // --- Import System Modules ---
 import { generateImageFromText, generateTextFromImage } from './systems/ai.js';
-import { initCharacterCreation, saveProfile, restartGame, useClassAbility } from './systems-character.js';
+// THIS LINE IS NOW FIXED
+import { initCharacterCreation, saveProfile, restartGame, useClassAbility } from './systems/character.js';
 import { performCombatAction } from './systems/combat.js';
 import { initDiceSystem, rollTheBones, continueAfterRoll } from './systems/dice.js';
 import { makeChoice, makeCustomChoice } from './systems/game-loop.js';
@@ -19,7 +20,7 @@ import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from 
 window.saveProfile = saveProfile;
 window.restartGame = restartGame;
 window.makeChoice = makeChoice;
-window.makeCustomChoice = makeCustomChoice; // <-- This line makes the custom choice button work
+window.makeCustomChoice = makeCustomChoice;
 window.performCombatAction = performCombatAction;
 window.useClassAbility = useClassAbility;
 window.rollTheBones = rollTheBones;
