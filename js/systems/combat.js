@@ -1,7 +1,7 @@
 // js/systems/combat.js
 // Handles all logic related to combat encounters.
 
-import { gameState, combatSystem, characterStats, userProfile, story } from '../state.js';
+import { gameState, combatSystem, characterStats, userProfile, story, appendStory } from '../state.js';
 import { enemyTemplates, difficultySettings } from '../data.js';
 import { updateStory, updateCombatVisibility, updateStatsDisplay, speakText, generateStoryImage } from '../ui.js';
 import { generateText } from './ai.js';
@@ -18,9 +18,7 @@ export async function generateCombatEvent(dangerLevel) {
     gameState.combatActive = true;
     updateCombatVisibility();
 
-    // Determine enemy type based on danger level
     const enemyOptions = Object.keys(enemyTemplates).filter(key => {
-        // A simple way to map danger level, can be more complex
         const enemyDanger = Math.ceil(enemyTemplates[key].maxHealth / 20);
         return enemyDanger <= dangerLevel;
     });
@@ -30,11 +28,10 @@ export async function generateCombatEvent(dangerLevel) {
         : Object.keys(enemyTemplates)[Math.floor(Math.random() * Object.keys(enemyTemplates).length)];
 
     const enemyTemplate = enemyTemplates[enemyType];
-    const enemy = { ...enemyTemplate }; // Clone the template
+    const enemy = { ...enemyTemplate };
 
-    // Apply difficulty modifiers
     const diffMod = difficultySettings[userProfile.difficulty];
-    enemy.health = Math.floor(enemy.health / (diffMod.healthMod || 1)); // Avoid division by zero
+    enemy.health = Math.floor(enemy.health / (diffMod.healthMod || 1));
     enemy.maxHealth = enemy.health;
     enemy.damage = Math.floor(enemy.damage * diffMod.damageReceived);
 
@@ -46,7 +43,6 @@ export async function generateCombatEvent(dangerLevel) {
     combatSystem.playerEffects = [];
     combatSystem.enemyEffects = [];
 
-    // Update combat UI
     document.getElementById('enemyName').textContent = enemy.name;
     updateEnemyHealth();
     updatePlayerHealth();
@@ -57,7 +53,7 @@ export async function generateCombatEvent(dangerLevel) {
         Make it atmospheric and evocative. Use short, punchy sentences for dramatic effect.
     `);
 
-    story += `\n\n${combatNarrative}`;
+    appendStory(`\n\n${combatNarrative}`);
     updateStory();
     speakText(combatNarrative);
 
@@ -92,14 +88,12 @@ export function performCombatAction(action) {
             break;
 
         case 'special':
-            // Simplified special logic, would be expanded with ability system
             damage = Math.floor(characterStats.intelligence * 1.2) + Math.floor(Math.random() * 12) + 5;
             combatLog.innerHTML += `<div class="combatMessage player">You unleash a special ability for <span class="damage critical">${damage}</span> damage!</div>`;
             combatSystem.currentEnemy.health -= damage;
             break;
 
         case 'item':
-            // Placeholder for using an item
             const healingAmount = 20;
             characterStats.health = Math.min(characterStats.maxHealth, characterStats.health + healingAmount);
             combatLog.innerHTML += `<div class="combatMessage player">You use a healing potion, restoring <span class="healing">${healingAmount}</span> health!</div>`;
@@ -111,12 +105,11 @@ export function performCombatAction(action) {
 
     if (combatSystem.currentEnemy.health <= 0) {
         combatLog.innerHTML += `<div class="combatMessage system">You have defeated the ${combatSystem.currentEnemy.name}!</div>`;
-        gainExperience(30); // Grant XP for victory
+        gainExperience(30);
         setTimeout(() => endCombat(true), 1500);
         return;
     }
 
-    // Enemy's turn after a delay
     setTimeout(performEnemyAction, 1500);
 }
 
@@ -125,7 +118,7 @@ export function performEnemyAction() {
 
     const enemy = combatSystem.currentEnemy;
     const combatLog = document.getElementById('combatLog');
-    let action = 'attack'; // Default action
+    let action = 'attack';
 
     if (enemy.health < enemy.maxHealth * 0.3 && Math.random() < 0.3) {
         action = 'defend';
@@ -174,22 +167,19 @@ export function endCombat(victory) {
     updateCombatVisibility();
 
     if (victory) {
-        story += "\n\nYou emerge victorious from the fray!";
+        appendStory("\n\nYou emerge victorious from the fray!");
+        updateStory();
+        generateChoices();
     } else {
-        // Show death screen
         document.getElementById('deathScreenModal').classList.add('active');
-        return; // Stop game loop on death
     }
-
-    updateStory();
-    generateChoices();
 }
 
 export function updatePlayerHealth() {
     if (characterStats.health < 0) characterStats.health = 0;
     document.getElementById('playerHealthText').textContent = `${characterStats.health}/${characterStats.maxHealth}`;
     document.getElementById('playerHealthFill').style.width = `${(characterStats.health / characterStats.maxHealth) * 100}%`;
-    updateStatsDisplay(); // Keep the main stats panel in sync
+    updateStatsDisplay();
 }
 
 export function updateEnemyHealth() {

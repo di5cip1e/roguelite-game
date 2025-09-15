@@ -1,8 +1,8 @@
 // js/systems/map.js
 // Manages the world map, procedural generation, and travel between locations.
 
-import { mapSystem, story } from '../state.js';
-import { updateStory, speakText, generateStoryImage } from '../ui.js';
+import { mapSystem, story, appendStory } from '../state.js';
+import { updateStory, speakText } from '../ui.js';
 import { generateText, generateImage } from './ai.js';
 import { generateTravelEvents } from './events.js';
 
@@ -37,7 +37,15 @@ async function createMapBackground() {
 export async function generateWorldMap() {
     if (!mapSystem.canvas || !mapSystem.ctx) return;
 
-    const locationTypes = ["village", "forest", "mountain", "dungeon", "ruins", "city", "swamp"];
+    const locationTypes = [
+        { type: "village", name: "Village", color: "#7d4f1a" },
+        { type: "forest", name: "Forest", color: "#215c30" },
+        { type: "mountain", name: "Mountain", color: "#616161" },
+        { type: "dungeon", name: "Dungeon", color: "#420d0d" },
+        { type: "ruins", name: "Ruins", color: "#757128" },
+        { type: "city", name: "City", color: "#38507a" },
+        { type: "swamp", name: "Swamp", color: "#3c5142" }
+    ];
     const locationCount = 8 + Math.floor(Math.random() * 5);
     const margin = 50;
 
@@ -49,7 +57,12 @@ export async function generateWorldMap() {
         const nameList = locationNamesText.split('\n').map(n => n.trim()).filter(Boolean);
 
         let positions = [];
+        let locationIds = [];
+
         for (let i = 0; i < locationCount; i++) {
+            let locType = locationTypes[Math.floor(Math.random() * locationTypes.length)];
+            let name = nameList[i] || `${locType.name} ${i + 1}`;
+            
             let x, y, tooClose;
             let attempts = 0;
             const minDistance = 80;
@@ -69,30 +82,31 @@ export async function generateWorldMap() {
             positions.push({ x, y });
 
             const locId = `loc_${i}`;
-            const type = locationTypes[Math.floor(Math.random() * locationTypes.length)];
+            locationIds.push(locId);
             mapSystem.locations[locId] = {
-                id: locId, name: nameList[i] || `${type} ${i+1}`, type, x, y,
-                color: '#7d4f1a', dangerLevel: 1 + Math.floor(Math.random() * 4),
-                description: "An uncharted location.", connectedTo: [], visited: false, imageUrl: null
+                id: locId, name, type: locType.type, typeName: locType.name,
+                x, y, color: locType.color, dangerLevel: 1 + Math.floor(Math.random() * 4),
+                description: `An uncharted ${locType.name}.`, connectedTo: [], visited: false, imageUrl: null
             };
         }
-        
-        // Connect the graph and generate descriptions/images...
-        // This is a simplified version of your original logic for brevity.
-        const locationIds = Object.keys(mapSystem.locations);
+
+        // Create paths and ensure a connected graph (simplified logic)
         locationIds.forEach(locId => {
-            const currentLoc = mapSystem.locations[locId];
-            const otherLocs = locationIds.filter(id => id !== locId).sort((a,b) => {
-                 // Sort by distance to find closest nodes
-                 const distA = Math.sqrt(Math.pow(mapSystem.locations[a].x - currentLoc.x, 2));
-                 const distB = Math.sqrt(Math.pow(mapSystem.locations[b].x - currentLoc.x, 2));
-                 return distA - distB;
-            });
-            // Connect to 1 or 2 closest nodes
-            for (let i=0; i < Math.min(otherLocs.length, 1 + Math.floor(Math.random() * 2)); i++) {
+            const loc = mapSystem.locations[locId];
+            const otherLocs = locationIds
+              .filter(id => id !== locId)
+              .sort((a, b) => {
+                const distA = Math.hypot(mapSystem.locations[a].x - loc.x, mapSystem.locations[a].y - loc.y);
+                const distB = Math.hypot(mapSystem.locations[b].x - loc.x, mapSystem.locations[b].y - loc.y);
+                return distA - distB;
+              });
+
+            const connections = 1 + Math.floor(Math.random() * 2);
+            for(let i = 0; i < connections && i < otherLocs.length; i++) {
                 const otherId = otherLocs[i];
-                if (!currentLoc.connectedTo.includes(otherId) && !mapSystem.locations[otherId].connectedTo.includes(locId)) {
-                    currentLoc.connectedTo.push(otherId);
+                if (!loc.connectedTo.includes(otherId) && !mapSystem.locations[otherId].connectedTo.includes(locId)) {
+                    loc.connectedTo.push(otherId);
+                    mapSystem.locations[otherId].connectedTo.push(locId);
                     mapSystem.paths.push({ from: locId, to: otherId });
                 }
             }
@@ -125,13 +139,14 @@ function drawMap() {
 
 function drawFallbackBackground() {
     if (!mapSystem.ctx) return;
-    mapSystem.ctx.fillStyle = '#e0d8b0'; // Parchment color
+    mapSystem.ctx.fillStyle = '#e0d8b0';
     mapSystem.ctx.fillRect(0, 0, mapSystem.canvas.width, mapSystem.canvas.height);
 }
 
 function drawMapContent() {
     if (!mapSystem.ctx) return;
     const ctx = mapSystem.ctx;
+    
     // Draw paths
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
@@ -146,7 +161,6 @@ function drawMapContent() {
         }
     });
 
-    // Draw selected path highlight
     if (mapSystem.selectedPath) {
         const from = mapSystem.locations[mapSystem.currentLocation];
         const to = mapSystem.locations[mapSystem.selectedPath];
@@ -167,15 +181,9 @@ function drawMapContent() {
         ctx.arc(loc.x, loc.y, 8, 0, Math.PI * 2);
         ctx.fillStyle = loc.visited ? '#c7a758' : '#634d22';
         ctx.fill();
-        ctx.strokeStyle = '#111';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = locId === mapSystem.currentLocation ? '#ff4081' : '#111';
+        ctx.lineWidth = locId === mapSystem.currentLocation ? 3 : 2;
         ctx.stroke();
-
-        if (locId === mapSystem.currentLocation) {
-            ctx.strokeStyle = '#ff4081';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
     }
 }
 
@@ -185,7 +193,7 @@ function updateLocationInfo() {
     if (!location) return;
 
     document.getElementById('locationName').textContent = location.name;
-    document.getElementById('locationDesc').textContent = location.description || `You are at ${location.name}.`;
+    document.getElementById('locationDesc').textContent = location.description;
     
     const pathOptions = document.getElementById('pathOptions');
     pathOptions.innerHTML = '';
@@ -217,7 +225,7 @@ export async function travelToLocation() {
     const toLoc = mapSystem.locations[mapSystem.selectedPath];
 
     const travelNarrative = await generateText(`Write a brief paragraph about traveling from ${fromLoc.name} to ${toLoc.name}.`);
-    story += `\n\n${travelNarrative}`;
+    appendStory(`\n\n${travelNarrative}`);
     updateStory();
     speakText(travelNarrative);
     
@@ -228,6 +236,5 @@ export async function travelToLocation() {
     drawMap();
     updateLocationInfo();
     
-    // This function will be in events.js
     await generateTravelEvents(fromLoc.dangerLevel); 
 }

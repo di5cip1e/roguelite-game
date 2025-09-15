@@ -1,15 +1,15 @@
 // js/systems/character.js
 // Manages player character creation, stats, abilities, and progression.
 
-import { userProfile, characterStats, gameState, keptItems, story } from '../state.js';
+import { userProfile, characterStats, gameState, keptItems, story, appendStory, combatSystem } from '../state.js';
 import { difficultySettings, classAbilities, talentEffects } from '../data.js';
 import { updateStatsDisplay, updateStory } from '../ui.js';
 import { startGame } from './game-loop.js';
-// Note: We will create the combat functions this file imports later.
 import { endCombat, performEnemyAction, updatePlayerHealth, updateEnemyHealth } from './combat.js';
 
 export function initCharacterCreation() {
     const profileModal = document.getElementById('profileModal');
+    if (!profileModal) return;
 
     // Set default difficulty
     document.querySelectorAll('.profileOption[data-default="true"]').forEach(option => {
@@ -37,13 +37,12 @@ export function initCharacterCreation() {
       }
     });
 
-    // Load any kept items from previous runs
     if (localStorage.keptItems) {
       try {
-        keptItems = JSON.parse(localStorage.keptItems);
+        window.keptItems = JSON.parse(localStorage.keptItems); // Use window scope for simplicity
       } catch (e) {
         console.error("Error loading kept items:", e);
-        keptItems = [];
+        window.keptItems = [];
       }
     }
 }
@@ -169,21 +168,67 @@ export function gainExperience(amount) {
             default: characterStats.strength += 1; characterStats.agility += 1; characterStats.intelligence += 1; break;
         }
 
-        story += `\n\n*You have reached level ${characterStats.level}! Your abilities have grown stronger.*`;
+        appendStory(`\n\n*You have reached level ${characterStats.level}! Your abilities have grown stronger.*`);
         updateStory();
     }
     updateStatsDisplay();
 }
 
 export function useClassAbility(abilityEffect) {
-    // This is a placeholder for the full combat-integrated ability usage
-    console.log("Using ability:", abilityEffect);
-    story += `\n\nYou attempt to use your ability: ${abilityEffect}.`;
-    updateStory();
+    const ability = gameState.activeAbilities.find(a => a.effect === abilityEffect);
+    if (!ability || !ability.usable) {
+      console.log("Ability not usable or not found.");
+      return;
+    }
+
+    if (!gameState.combatActive) {
+        appendStory(`\n\nYou practice your ${ability.name} ability, readying it for the next encounter.`);
+        updateStory();
+        return;
+    }
+
+    const combatLog = document.getElementById('combatLog');
+    let enemy = combatSystem.currentEnemy;
+    let damage = 0;
+    let healAmount = 0;
+
+    switch (abilityEffect) {
+        case "teleportBehindEnemy":
+            combatLog.innerHTML += `<div class="combatMessage player">You use Shadow Step to teleport behind the enemy!</div>`;
+            damage = Math.floor(characterStats.agility * 1.5) + Math.floor(Math.random() * 8);
+            combatLog.innerHTML += `<div class="combatMessage player">You strike for <span class="damage critical">${damage} critical damage</span>!</div>`;
+            enemy.health -= damage;
+            break;
+        case "lifeDrain":
+            combatLog.innerHTML += `<div class="combatMessage player">You cast Life Drain, siphoning the enemy's vitality!</div>`;
+            damage = Math.floor(characterStats.intelligence * 0.7) + Math.floor(Math.random() * 8);
+            healAmount = Math.floor(damage * 0.5);
+            combatLog.innerHTML += `<div class="combatMessage player">You drain <span class="damage">${damage} health</span> and heal yourself for <span class="healing">${healAmount}</span>!</div>`;
+            enemy.health -= damage;
+            characterStats.health = Math.min(characterStats.maxHealth, characterStats.health + healAmount);
+            updatePlayerHealth();
+            break;
+        // Add other ability effects here
+        default:
+             appendStory(`\n\nYou attempt to use your ${ability.name} ability.`);
+             updateStory();
+             return;
+    }
+    
+    // Mark ability as used (simple cooldown for now, needs more robust system)
+    ability.usable = false;
+    document.querySelector(`.classAbilityBtn[onclick="useClassAbility('${ability.effect}')"]`).disabled = true;
+
+    updateEnemyHealth();
+    if (enemy.health <= 0) {
+        combatLog.innerHTML += `<div class="combatMessage system">You have defeated the ${enemy.name}!</div>`;
+        setTimeout(() => endCombat(true), 1500);
+    } else {
+        setTimeout(performEnemyAction, 1500);
+    }
 }
 
 export function restartGame() {
     console.log("Restarting game...");
-    // This would eventually reset all state and show the profile modal again.
     location.reload();
 }

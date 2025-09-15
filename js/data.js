@@ -279,45 +279,98 @@ export const npcTemplates = {
     }
   },
   innkeeper: {
-    name: "Eliza the Innkeeper", attitude: "friendly", portrait: "innkeeper",
-    description: "A warm-hearted woman who runs the local tavern",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
+      name: "Eliza the Innkeeper", attitude: "friendly", portrait: "innkeeper",
+      description: "A warm-hearted woman who runs the local tavern",
+      dialogues: {
+        greeting: {
+          text: "Welcome to the Sleeping Dragon! Can I get you a drink or a room for the night?",
+          choices: [
+            { text: "I'd like a room, please.", nextNode: "room", impact: "rest" },
+            { text: "A drink would be nice.", nextNode: "drink" },
+            { text: "What's the gossip around here?", nextNode: "gossip", impact: "knowledge" },
+            { text: "Just looking around, thanks.", nextNode: "farewell" }
+          ]
+        },
+        room: {
+          text: "That'll be 5 gold pieces. The room's upstairs, first door on the left. Clean sheets and no bugs, I promise!",
+          choices: [
+            { text: "Here's the gold. (Pay 5 gold)", nextNode: "rest", impact: "payment" },
+            { text: "That's a bit steep. How about 3 gold?", nextNode: "haggle", impact: "reputation" },
+            { text: "I'll think about it.", nextNode: "greeting" }
+          ]
+        },
+        drink: {
+          text: "What's your poison? We've got ale, mead, and a special spirit from the mountains that'll put hair on your chest - even if you don't want it there!",
+          choices: [
+            { text: "I'll have an ale.", nextNode: "ale", impact: "payment" },
+            { text: "Mead sounds good.", nextNode: "mead", impact: "payment" },
+            { text: "Let me try that special spirit.", nextNode: "spirit", impact: "payment" },
+            { text: "Actually, I'm not thirsty.", nextNode: "greeting" }
+          ]
+        },
+        gossip: {
+          text: "Well, they say old man Guthrie's seen ghosts up at the abandoned mill. And there's talk of travelers going missing on the east road. Strange times, these.",
+          choices: [
+            { text: "Tell me more about these ghosts.", nextNode: "ghosts", impact: "quest" },
+            { text: "Missing travelers? That's concerning.", nextNode: "missing", impact: "quest" },
+            { text: "Let's change the subject.", nextNode: "greeting" }
+          ]
+        },
+        farewell: {
+          text: "Come back anytime! The door's always open... well, except when we're closed, of course!",
+          choices: [
+            { text: "Goodbye.", nextNode: "end" }
+          ]
+        }
+      }
+    },
   mystic: {
-    name: "Zephyr the Mystic", attitude: "neutral", portrait: "mystic",
-    description: "A mysterious seer with knowledge of arcane matters",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
-  guard: {
-    name: "Captain Thorne", attitude: "unfriendly", portrait: "guard",
-    description: "A stern captain of the city watch",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
-  beggar: {
-    name: "Old Finn", attitude: "neutral", portrait: "beggar",
-    description: "A ragged beggar with one eye and surprising knowledge",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
-  witch: {
-    name: "Morgana the Witch", attitude: "neutral", portrait: "witch",
-    description: "A mysterious witch living in a secluded hut",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
-  stranger: {
-    name: "Mysterious Stranger", attitude: "neutral", portrait: "stranger",
-    description: "A cloaked figure shrouded in mystery",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
-  cultist: {
-    name: "Robed Cultist", attitude: "hostile", portrait: "cultist",
-    description: "A member of a dark cult, initially disguised as a normal citizen",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  },
-  blacksmith: {
-    name: "Hagar the Blacksmith", attitude: "friendly", portrait: "blacksmith",
-    description: "A burly blacksmith with a friendly demeanor",
-    dialogues: { /* ... content collapsed for brevity ... */ }
-  }
+      name: "Zephyr the Mystic", attitude: "neutral", portrait: "mystic",
+      description: "A mysterious seer with knowledge of arcane matters",
+      dialogues: {
+        greeting: {
+          text: "I sensed your arrival before you entered. Your aura speaks of destiny and danger intertwined.",
+          choices: [
+            { text: "Can you tell my fortune?", nextNode: "fortune", impact: "knowledge" },
+            { text: "What do you know about ancient artifacts?", nextNode: "artifacts", impact: "quest" },
+            { text: "Who are you exactly?", nextNode: "identity" },
+            { text: "I should go.", nextNode: "farewell" }
+          ]
+        },
+        fortune: {
+          text: "I see... shadows gathering. A crossroads approaches. One path leads to glory, another to darkness. And there is... a figure watching you from beyond the veil. Someone from your past.",
+          choices: [
+            { text: "Who is watching me?", nextNode: "watcher", impact: "knowledge" },
+            { text: "How do I choose the right path?", nextNode: "path", impact: "knowledge" },
+            { text: "This is too vague to be useful.", nextNode: "skeptical", impact: "reputation" },
+            { text: "Thank you for the reading.", nextNode: "greeting" }
+          ]
+        },
+        artifacts: {
+          text: "The ancient ones left many powerful relics. Some to protect, some to destroy. I sense you seek the Amulet of Shadows. It is a dangerous thing, drawing the bearer closer to the realm of darkness with each use.",
+          choices: [
+            { text: "How do you know I seek this amulet?", nextNode: "amulet_how", impact: "knowledge" },
+            { text: "Where can I find this amulet?", nextNode: "amulet_where", impact: "quest" },
+            { text: "What does the amulet do exactly?", nextNode: "amulet_power", impact: "knowledge" },
+            { text: "I'm not interested in dark artifacts.", nextNode: "greeting" }
+          ]
+        },
+        identity: {
+          text: "I am but a seeker of truths that lie beyond the veil of ordinary perception. Some call me witch, some call me prophet. I am neither and both.",
+          choices: [
+            { text: "How did you gain your powers?", nextNode: "powers", impact: "knowledge" },
+            { text: "Are there others like you?", nextNode: "others", impact: "knowledge" },
+            { text: "Let's talk about something else.", nextNode: "greeting" }
+          ]
+        },
+        farewell: {
+          text: "Our paths will cross again. The threads of fate have already woven that certainty.",
+          choices: [
+            { text: "Until next time.", nextNode: "end" }
+          ]
+        }
+      }
+    }
 };
 
 export const difficultySettings = {

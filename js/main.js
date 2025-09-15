@@ -4,16 +4,15 @@
 
 // --- Import System Modules ---
 import { generateImageFromText, generateTextFromImage } from './systems/ai.js';
-// THIS LINE IS NOW FIXED
 import { initCharacterCreation, saveProfile, restartGame, useClassAbility } from './systems/character.js';
-import { performCombatAction } from './systems/combat.js';
+import { initCombat, performCombatAction } from './systems/combat.js';
 import { initDiceSystem, rollTheBones, continueAfterRoll } from './systems/dice.js';
 import { makeChoice, makeCustomChoice } from './systems/game-loop.js';
 import { initMapSystem, travelToLocation, selectPath } from './systems/map.js';
-import { initSettings } from './systems/settings.js';
+import { initSettings, showDisplaySettings } from './systems/settings.js';
+import { handleDialogueChoice } from './systems/dialogue.js';
 
 // --- Import UI Modules ---
-// THIS LINE IS NOW FIXED
 import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from './ui.js';
 
 // --- Global Function Exposure ---
@@ -34,12 +33,15 @@ window.showDiceRoller = showDiceRoller;
 window.generateImageFromText = generateImageFromText;
 window.generateTextFromImage = generateTextFromImage;
 window.toggleTTS = toggleTTS;
+window.handleDialogueChoice = handleDialogueChoice;
 
 
 // --- Game Initialization ---
+// This event listener waits for the HTML document to be fully loaded before running any scripts.
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize all the different systems
     initCharacterCreation();
+    initCombat();
     initDiceSystem();
     initMapSystem();
     initSettings();

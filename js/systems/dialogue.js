@@ -1,7 +1,7 @@
 // js/systems/dialogue.js
 // Handles all logic for NPC interactions and dialogue trees.
 
-import { gameState, relationships, story } from '../state.js';
+import { gameState, relationships, story, appendStory } from '../state.js';
 import { npcTemplates } from '../data.js';
 import { updateDialogueVisibility, updateStory, speakText } from '../ui.js';
 import { generateText, generateImage } from './ai.js';
@@ -16,11 +16,10 @@ export async function generateDialogueEvent() {
     const npc = { ...npcTemplates[npcType] }; // Use a copy of the template
 
     const npcName = npc.name;
-    if (relationships[npcName]) {
-        npc.attitude = relationships[npcName].attitude;
-    } else {
+    if (!relationships[npcName]) {
         relationships[npcName] = { score: 0, attitude: npc.attitude };
     }
+    npc.attitude = relationships[npcName].attitude;
 
     // Update UI elements
     document.getElementById('npcName').textContent = npcName;
@@ -39,11 +38,10 @@ export async function generateDialogueEvent() {
         Describe their appearance and initial greeting or behavior.
     `);
 
-    story += `\n\n${encounterNarrative}`;
+    appendStory(`\n\n${encounterNarrative}`);
     updateStory();
     speakText(encounterNarrative);
 
-    // Start dialogue from the beginning
     displayDialogueNode(npc, 'greeting');
 }
 
@@ -60,7 +58,7 @@ export function handleDialogueChoice(npc, choice) {
         return;
     }
 
-    story += `\n\nYou say: "${choice.text}"\n\n${npc.name} responds: "${nextNode.text}"`;
+    appendStory(`\n\nYou say: "${choice.text}"\n\n${npc.name} responds: "${nextNode.text}"`);
     updateStory();
     speakText(nextNode.text);
 
@@ -85,7 +83,7 @@ function displayDialogueNode(npc, nodeKey) {
             const choiceBtn = document.createElement('button');
             choiceBtn.className = 'dialogueChoice';
             choiceBtn.textContent = choice.text;
-            // Recreate the NPC object for the event handler to ensure it's the correct one
+            // Pass a fresh copy of the npc object to the handler
             choiceBtn.onclick = () => handleDialogueChoice({ ...npc }, choice);
             dialogueChoicesCtn.appendChild(choiceBtn);
         }
@@ -98,7 +96,7 @@ export function endDialogue(npc, choice, graceful = false) {
 
     if (!graceful) {
         const farewellNode = npc.dialogues.farewell || { text: "Our conversation ends." };
-        story += `\n\nYou say: "${choice.text}"\n\n${npc.name} nods. ${farewellNode.text}`;
+        appendStory(`\n\nYou say: "${choice.text}"\n\n${npc.name} nods. ${farewellNode.text}`);
     }
     
     updateStory();

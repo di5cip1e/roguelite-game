@@ -5,6 +5,7 @@ import { displaySettings } from '../state.js';
 
 // Helper function to convert color values to HEX for the color picker
 function toHex(color) {
+    if (!color) return '#000000';
     if (color.startsWith('#')) return color;
     if (color.startsWith('rgb')) {
         const parts = color.match(/(\d+)/g);
@@ -23,7 +24,6 @@ function applyDisplaySettings() {
     const storyCtn = document.getElementById('storyCtn');
     if (!gameCtn || !storyCtn) return;
 
-    // Apply styles
     gameCtn.style.borderColor = displaySettings.borderColor;
     gameCtn.style.backgroundColor = displaySettings.backgroundColor;
     storyCtn.style.color = displaySettings.textColor;
@@ -31,8 +31,12 @@ function applyDisplaySettings() {
 }
 
 function loadDisplaySettingsToUI() {
-    document.getElementById('textColorPicker').value = toHex(displaySettings.textColor);
-    document.getElementById('fontSelect').value = displaySettings.fontFamily;
+    const textColorPicker = document.getElementById('textColorPicker');
+    const fontSelect = document.getElementById('fontSelect');
+
+    if(textColorPicker) textColorPicker.value = toHex(displaySettings.textColor);
+    if(fontSelect) fontSelect.value = displaySettings.fontFamily;
+    
     applyDisplaySettings();
 }
 
@@ -42,29 +46,37 @@ export function initSettings() {
         displaySettings[setting] = value;
         applyDisplaySettings();
     };
+
     window.applyPreset = (preset) => {
         switch (preset) {
             case 'classic':
-                displaySettings.textColor = "#c7a758";
-                displaySettings.fontFamily = "'Crimson Pro', serif";
-                displaySettings.backgroundColor = "rgba(20, 15, 8, 0.92)";
-                displaySettings.borderColor = "#634d22";
+                Object.assign(displaySettings, {
+                    textColor: "#c7a758",
+                    fontFamily: "'Crimson Pro', serif",
+                    backgroundColor: "rgba(20, 15, 8, 0.92)",
+                    borderColor: "#634d22"
+                });
                 break;
             case 'dark':
-                displaySettings.textColor = "#aaaaaa";
-                displaySettings.fontFamily = "'Crimson Pro', serif";
-                displaySettings.backgroundColor = "rgba(10, 10, 10, 0.95)";
-                displaySettings.borderColor = "#444444";
+                Object.assign(displaySettings, {
+                    textColor: "#aaaaaa",
+                    fontFamily: "'Crimson Pro', serif",
+                    backgroundColor: "rgba(10, 10, 10, 0.95)",
+                    borderColor: "#444444"
+                });
                 break;
             case 'retro':
-                displaySettings.textColor = "#33ff33";
-                displaySettings.fontFamily = "'Press Start 2P', cursive";
-                displaySettings.backgroundColor = "rgba(0, 20, 0, 0.9)";
-                displaySettings.borderColor = "#33ff33";
+                Object.assign(displaySettings, {
+                    textColor: "#33ff33",
+                    fontFamily: "'Press Start 2P', cursive",
+                    backgroundColor: "rgba(0, 20, 0, 0.9)",
+                    borderColor: "#33ff33"
+                });
                 break;
         }
         loadDisplaySettingsToUI();
     };
+
     window.saveDisplaySettings = () => {
         try {
             localStorage.setItem('displaySettings', JSON.stringify(displaySettings));
@@ -73,13 +85,16 @@ export function initSettings() {
             console.error("Error saving display settings:", e);
         }
     };
+
     window.resetDisplaySettings = () => {
         localStorage.removeItem('displaySettings');
         // Reset to default values
-        displaySettings.textColor = "#c7a758";
-        displaySettings.fontFamily = "'Crimson Pro', serif";
-        displaySettings.backgroundColor = "rgba(20, 15, 8, 0.92)";
-        displaySettings.borderColor = "#634d22";
+        Object.assign(displaySettings, {
+            textColor: "#c7a758",
+            fontFamily: "'Crimson Pro', serif",
+            backgroundColor: "rgba(20, 15, 8, 0.92)",
+            borderColor: "#634d22"
+        });
         loadDisplaySettingsToUI();
         alert('Display settings reset to default.');
     };
@@ -98,5 +113,8 @@ export function initSettings() {
 }
 
 export function showDisplaySettings() {
-    document.getElementById('displaySettingsCtn').style.display = 'block';
+    const settingsCtn = document.getElementById('displaySettingsCtn');
+    if(settingsCtn) {
+        settingsCtn.style.display = 'block';
+    }
 }
