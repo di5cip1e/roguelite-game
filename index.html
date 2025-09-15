@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Roguelite: Dark Adventures</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="gameCtn">
+  <h1>Roguelite: Dark Adventures</h1>
+  
+  <div id="gameLayout">
+    <div id="leftColumn">
+      <div id="imageContainer">
+        <img id="storyImage" alt="Story Image" hidden />
+      </div>
+      
+      <div id="characterStatsCtn">
+        <h3>Character Stats</h3>
+        <div class="statGrid" id="statsGrid"></div>
+      </div>
+      
+      <div id="classAbilitiesCtn">
+        <h3>Class Abilities</h3>
+        <div class="abilityList" id="abilityList"></div>
+      </div>
+      
+      <div id="textToImageCtn">
+        <input id="textToImageInput" placeholder="Describe an image to generate..." />
+        <button onclick="generateImageFromText()">Generate Image</button>
+      </div>
+      
+      <div id="imageToTextCtn">
+        <input id="imageToTextInput" type="file" accept="image/*" />
+        <button onclick="generateTextFromImage()">Generate Text from Image</button>
+      </div>
+    </div>
+    
+    <div id="middleColumn">
+      <div id="loadingIndicator" hidden>⏳ Summoning dark forces...</div>
+      <div id="storyCtn" class="preserve-whitespace"></div>
+      
+      <div id="choicesCtn"></div>
+      
+      <div id="customChoiceSection">
+        <h3>Forge Your Own Path</h3>
+        <input id="customChoiceInput" placeholder="Describe your own action or response..." />
+        <button id="submitCustomChoiceBtn" onclick="makeCustomChoice()">Submit Custom Choice</button>
+      </div>
+      
+      <div id="dialogueCtn" hidden>
+        <div id="dialogueHeader">
+          <img id="npcPortrait" src="https://placehold.co/80x80?text=NPC" alt="NPC Portrait">
+          <div id="npcInfo">
+            <h3 id="npcName">Unknown NPC</h3>
+            <div id="npcAttitude">Attitude: <span class="relationshipIndicator neutral">Neutral</span></div>
+          </div>
+        </div>
+        <div id="dialogueContent">...</div>
+        <div id="dialogueChoices"></div>
+      </div>
+      
+      <div id="combatCtn" hidden>
+        <h3 id="combatTitle">Combat</h3>
+        <div id="combatLayout">
+          <div id="playerCombatCtn">
+            <h4 class="combatantName">You</h4>
+            <img id="playerCombatImg" class="combatantImg" src="https://placehold.co/120x120?text=Player" alt="Player">
+            <div class="healthBar">
+              <div id="playerHealthFill" class="healthBarFill"></div>
+              <div id="playerHealthText" class="healthBarText">100/100</div>
+            </div>
+            <div id="playerStatus" class="combatStatus"></div>
+          </div>
+          <div id="enemyCombatCtn">
+            <h4 id="enemyName" class="combatantName">Enemy</h4>
+            <img id="enemyCombatImg" class="combatantImg" src="https://placehold.co/120x120?text=Enemy" alt="Enemy">
+            <div class="healthBar">
+              <div id="enemyHealthFill" class="healthBarFill"></div>
+              <div id="enemyHealthText" class="healthBarText">100/100</div>
+            </div>
+            <div id="enemyStatus" class="combatStatus"></div>
+          </div>
+        </div>
+        <div id="combatActions">
+          <button id="attackBtn" class="combatBtn" onclick="performCombatAction('attack')">Attack</button>
+          <button id="defendBtn" class="combatBtn" onclick="performCombatAction('defend')">Defend</button>
+          <button id="specialBtn" class="combatBtn" onclick="performCombatAction('special')">Special</button>
+          <button id="itemBtn" class="combatBtn" onclick="performCombatAction('item')">Use Item</button>
+        </div>
+        <div id="combatLog">
+          <div class="combatMessage system">Combat has begun! Choose your action...</div>
+        </div>
+      </div>
+      
+      <div id="questJournalElement" class="repgElement">
+        <h3>Quest Journal</h3>
+        <div id="questEntries"></div>
+      </div>
+      
+      <div id="ttsControlsCtn">
+        <button id="toggleTtsBtn" onclick="toggleTTS()">
+          <span class="ttsIcon">🔈</span>
+          <span id="ttsButtonText">Enable Narrator</span>
+        </button>
+      </div>
+      
+      <div id="diceSection">
+        <div id="diceDescription">Select dice type and roll to determine your fate...</div>
+        <div id="diceTypeSelection">
+          <button class="dice-btn" data-dice="d4">d4</button>
+          <button class="dice-btn" data-dice="d6">d6</button>
+          <button class="dice-btn" data-dice="d8">d8</button>
+          <button class="dice-btn" data-dice="d10">d10</button>
+          <button class="dice-btn" data-dice="d12">d12</button>
+          <button class="dice-btn" data-dice="d20">d20</button>
+          <button class="dice-btn" data-dice="d100">d100</button>
+        </div>
+        <div id="diceNotation">
+          <input type="number" id="diceCount" value="1" min="1" max="10">
+          <span id="diceType">d20</span>
+          <span>+</span>
+          <input type="number" id="diceModifier" value="0" min="-10" max="10">
+        </div>
+        <div id="diceTray"></div>
+        <div id="diceResult"></div>
+        <div id="diceInfo">
+          <p>Common dice uses in RPGs:</p>
+          <ul>
+            <li><strong>d20:</strong> The core die for checks, attacks, and saves.</li>
+            <li><strong>d4-d12:</strong> Typically used for damage and spell effects.</li>
+            <li><strong>d100:</strong> Used for percentile-based outcomes.</li>
+          </ul>
+        </div>
+        <button id="rollBtn" onclick="rollTheBones()">Roll The Bones</button>
+        <button id="continueBtn" hidden onclick="continueAfterRoll()">Continue</button>
+      </div>
+    </div>
+    
+    <div id="rightColumn">
+      </div>
+  </div>
+</div>
+
+<div id="mapContainer">
+  <h3 id="mapTitle">World Map</h3>
+  <canvas id="mapCanvas" width="450" height="350"></canvas>
+  <div id="locationInfo">
+    <h4 id="locationName">Current Location</h4>
+    <p id="locationDesc">Description of your current location will appear here.</p>
+    <div id="pathOptions"></div>
+    <button id="travelBtn" disabled onclick="travelToLocation()">Travel</button>
+  </div>
+</div>
+
+<div id="inventoryCtn">
+  <h3>Inventory</h3>
+  <div class="inventoryGrid" id="inventoryGrid"></div>
+</div>
+
+<div id="displaySettingsCtn">
+  <h3>Display Settings</h3>
+  <div class="settingsGroup">
+    <h4>Text & Font</h4>
+    <div class="settingItem">
+      <label for="textColorPicker">Text Color</label>
+      <input type="color" id="textColorPicker" oninput="updateDisplaySetting('textColor', this.value)">
+    </div>
+    <div class="settingItem">
+      <label for="fontSelect">Font Family</label>
+      <select id="fontSelect" onchange="updateDisplaySetting('fontFamily', this.value)">
+        <option value="'Crimson Pro', serif">Crimson Pro</option>
+        <option value="'MedievalSharp', cursive">MedievalSharp</option>
+        <option value="'Press Start 2P', cursive">Press Start 2P</option>
+      </select>
+    </div>
+  </div>
+  <div class="settingsGroup">
+    <h4>Theme Presets</h4>
+    <div class="presetBtnContainer">
+      <button class="presetBtn" onclick="applyPreset('classic')">Classic</button>
+      <button class="presetBtn" onclick="applyPreset('dark')">Dark</button>
+      <button class="presetBtn" onclick="applyPreset('retro')">Retro</button>
+    </div>
+  </div>
+  <div class="presetBtnContainer">
+    <button id="saveDisplayBtn" onclick="saveDisplaySettings()">Save Settings</button>
+    <button id="resetDisplayBtn" onclick="resetDisplaySettings()">Reset to Default</button>
+  </div>
+</div>
+
+<div id="worldLoreElement" class="repgElement">
+  <h3>World Lore</h3>
+  <div id="loreEntries"></div>
+</div>
+
+<div id="profileModal">
+  </div>
+
+<div id="deathScreenModal">
+  </div>
+
+<div id="gameMenu">
+  </div>
+<div id="menuToggle" onclick="toggleGameMenu()">≡</div>
+
+<div id="backgroundLoadingIndicator" hidden>⏳ Creating your world...</div>
+
+<script src="js/main.js" type="module" defer></script>
+</body>
+</html>
