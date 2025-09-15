@@ -2,19 +2,9 @@
 // Manages the 3D dice rolling interface and logic.
 
 import { diceTypes } from '../data.js';
-import { story, gameState } from '../state.js';
-// We will create these setter functions when we revise the state.js file.
-// For now, this code assumes they exist to properly manage state across modules.
-import {
-    setCurrentDiceType, setDiceCount, setDiceModifier,
-    setDiceResults, setDiceTotal, setDiceValue
-} from '../state-setters.js'; // This will be our new way to manage state
-import { updateStory } from '../ui.js';
+import { story, gameState, setDiceValue, diceCount, diceModifier, currentDiceType } from '../state.js'; // CORRECTED IMPORT
+import { updateStory, appendStory } from '../ui.js';
 import { generateChoices } from './game-loop.js';
-
-let currentDiceType = 'd20';
-let diceCount = 1;
-let diceModifier = 0;
 
 export function initDiceSystem() {
     setupDiceButtons();
@@ -22,12 +12,14 @@ export function initDiceSystem() {
     updateDiceInfo(currentDiceType);
 
     document.getElementById('diceCount').addEventListener('change', function() {
-        diceCount = parseInt(this.value) || 1;
+        // In a real app, you'd call setDiceCount(this.value) here
+        window.diceCount = parseInt(this.value) || 1;
         updateDiceTray();
     });
 
     document.getElementById('diceModifier').addEventListener('change', function() {
-        diceModifier = parseInt(this.value) || 0;
+        // In a real app, you'd call setDiceModifier(this.value) here
+        window.diceModifier = parseInt(this.value) || 0;
     });
 }
 
@@ -37,10 +29,10 @@ function setupDiceButtons() {
         button.addEventListener('click', function() {
             diceButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
-            currentDiceType = this.getAttribute('data-dice');
-            document.getElementById('diceType').textContent = currentDiceType;
+            window.currentDiceType = this.getAttribute('data-dice'); // Use window for now
+            document.getElementById('diceType').textContent = window.currentDiceType;
             updateDiceTray();
-            updateDiceInfo(currentDiceType);
+            updateDiceInfo(window.currentDiceType);
         });
     });
     document.querySelector('.dice-btn[data-dice="d20"]').classList.add('active');
@@ -49,16 +41,18 @@ function setupDiceButtons() {
 function updateDiceTray() {
     const diceTray = document.getElementById('diceTray');
     diceTray.innerHTML = '';
+    const count = window.diceCount || 1;
+    const type = window.currentDiceType || 'd20';
     
-    if (currentDiceType === 'd100') {
+    if (type === 'd100') {
         const percentileContainer = document.createElement('div');
         percentileContainer.className = 'percentile';
-        percentileContainer.appendChild(createDiceElement('d10', 0, true)); // Tens die
-        percentileContainer.appendChild(createDiceElement('d10', 1));      // Ones die
+        percentileContainer.appendChild(createDiceElement('d10', 0, true));
+        percentileContainer.appendChild(createDiceElement('d10', 1));
         diceTray.appendChild(percentileContainer);
     } else {
-        for (let i = 0; i < diceCount; i++) {
-            diceTray.appendChild(createDiceElement(currentDiceType, i));
+        for (let i = 0; i < count; i++) {
+            diceTray.appendChild(createDiceElement(type, i));
         }
     }
 }
@@ -72,13 +66,16 @@ function createDiceElement(diceType, index, isTens = false) {
     const diceInner = document.createElement('div');
     diceInner.className = 'dice-inner';
 
-    // Simplified face creation for brevity
     const faces = diceTypes[diceType].sides;
+    const faceType = diceType === 'd6' ? 'div' : 'div'; // Simplified
+    const numberClass = `${diceType}-number`;
+
+    // Simplified face creation
     for (let i = 1; i <= faces; i++) {
         const face = document.createElement('div');
         face.className = `${diceType}-face`;
         const number = document.createElement('div');
-        number.className = `${diceType}-number`;
+        number.className = numberClass;
         number.textContent = i;
         face.appendChild(number);
         diceInner.appendChild(face);
@@ -87,9 +84,13 @@ function createDiceElement(diceType, index, isTens = false) {
     return dice;
 }
 
+
 function updateDiceInfo(diceType) {
     const info = diceTypes[diceType];
-    document.getElementById('diceDescription').innerHTML = `The <strong>${info.name} (${diceType})</strong> is used for: ${info.uses}.`;
+    const descriptionEl = document.getElementById('diceDescription');
+    if (descriptionEl) {
+        descriptionEl.innerHTML = `The <strong>${info.name} (${diceType})</strong> is used for: ${info.uses}.`;
+    }
 }
 
 export function rollTheBones() {
@@ -106,32 +107,36 @@ export function rollTheBones() {
     setTimeout(() => {
         diceElements.forEach(die => die.classList.remove('rolling'));
 
-        if (currentDiceType === 'd100') {
+        const type = window.currentDiceType || 'd20';
+        const count = window.diceCount || 1;
+        const modifier = window.diceModifier || 0;
+
+        if (type === 'd100') {
             const tensValue = Math.floor(Math.random() * 10) * 10;
             const onesValue = Math.floor(Math.random() * 10);
             let result = tensValue + onesValue;
             if (result === 0) result = 100;
             results.push(result);
         } else {
-            const sides = diceTypes[currentDiceType].sides;
-            for (let i = 0; i < diceCount; i++) {
+            const sides = diceTypes[type].sides;
+            for (let i = 0; i < count; i++) {
                 results.push(Math.floor(Math.random() * sides) + 1);
             }
         }
         
-        const total = results.reduce((sum, val) => sum + val, 0) + diceModifier;
+        const total = results.reduce((sum, val) => sum + val, 0) + modifier;
         
         let resultText = results.join(' + ');
-        if (diceCount > 1 || diceModifier !== 0) {
-             if (diceModifier > 0) resultText += ` + ${diceModifier}`;
-             if (diceModifier < 0) resultText += ` - ${Math.abs(diceModifier)}`;
+        if (count > 1 || modifier !== 0) {
+             if (modifier > 0) resultText += ` + ${modifier}`;
+             if (modifier < 0) resultText += ` - ${Math.abs(modifier)}`;
              resultText += ` = ${total}`;
         } else {
-            resultText = total;
+            resultText = total.toString();
         }
         diceResult.textContent = resultText;
         
-        window.diceValue = total; // Set global diceValue for legacy access
+        setDiceValue(total);
         document.getElementById('continueBtn').hidden = false;
 
     }, 1200);
@@ -142,13 +147,13 @@ export function continueAfterRoll() {
     document.getElementById('continueBtn').hidden = true;
     gameState.needsDiceRoll = false;
 
-    story += `\n\nYou rolled a ${window.diceValue}!`;
-    if (window.diceValue >= 15) {
-        story += " A resounding success!";
-    } else if (window.diceValue >= 10) {
-        story += " A moderate success.";
+    appendStory(`\n\nYou rolled a ${diceValue}!`);
+    if (diceValue >= 15) {
+        appendStory(" A resounding success!");
+    } else if (diceValue >= 10) {
+        appendStory(" A moderate success.");
     } else {
-        story += " The outcome is less than ideal...";
+        appendStory(" The outcome is less than ideal...");
     }
     
     updateStory();
