@@ -4,12 +4,12 @@
 
 // --- Import System Modules ---
 import { generateImageFromText, generateTextFromImage } from './systems/ai.js';
-import { initCharacterCreation, saveProfile, restartGame, useClassAbility } from './systems/character.js';
+import { initCharacterCreation, saveProfile, restartGame, useClassAbility } from './systems-character.js';
 import { performCombatAction } from './systems/combat.js';
 import { initDiceSystem, rollTheBones, continueAfterRoll } from './systems/dice.js';
 import { makeChoice, makeCustomChoice } from './systems/game-loop.js';
 import { initMapSystem, travelToLocation, selectPath } from './systems/map.js';
-import { initSettings, showDisplaySettings } from './systems/settings.js';
+import { initSettings } from './systems/settings.js';
 
 // --- Import UI Modules ---
 import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from './ui.js';
@@ -18,8 +18,8 @@ import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from 
 // This section makes the modular functions "public" so the HTML onclick attributes can find them.
 window.saveProfile = saveProfile;
 window.restartGame = restartGame;
-window.makeChoice = makeChoice; // <--- THIS IS THE NEWLY ADDED LINE
-window.makeCustomChoice = makeCustomChoice;
+window.makeChoice = makeChoice;
+window.makeCustomChoice = makeCustomChoice; // <-- This line makes the custom choice button work
 window.performCombatAction = performCombatAction;
 window.useClassAbility = useClassAbility;
 window.rollTheBones = rollTheBones;
@@ -33,8 +33,8 @@ window.generateImageFromText = generateImageFromText;
 window.generateTextFromImage = generateTextFromImage;
 window.toggleTTS = toggleTTS;
 
+
 // --- Game Initialization ---
-// This event listener waits for the HTML document to be fully loaded before running any scripts.
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize all the different systems
     initCharacterCreation();
