@@ -674,3 +674,18 @@ input:checked + .slider:before { transform: translateX(32px); background: linear
   
 .levelUpChoice h4 { color: #ff4081; margin: 0 0 10px 0; font-family: "Press Start 2P", cursive; font-size: 1em; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); }
 .levelUpChoice p { color: #c7a758; margin: 0; font-size: 1em; line-height: 1.6; font-family: "Crimson Pro", serif; }
+/* --- FIX FOR INVISIBLE MODAL TEXT --- */
+/* This ensures the text inside the profile creation screen is always visible. */
+
+#profileContent h2,
+#profileContent h3,
+#profileContent h4,
+#profileContent p,
+#nsfwLabel {
+    color: #c7a758; /* Sets the main text to your theme's golden color */
+}
+
+#profileContent h2,
+#profileContent h4 {
+    color: #ff4081; /* Sets headers to your theme's pink color for emphasis */
+}
