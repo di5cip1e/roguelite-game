@@ -21,7 +21,7 @@ export async function generateText(prompt) {
 
     // IMPORTANT: Replace this with your actual Render Web Service URL.
     // You will get this URL after you deploy the backend in the next step.
-    const serviceUrl = "https://your-game-backend.onrender.com/api/generate-text";
+    const serviceUrl = "https://roguelite-game-serv.onrender.com/api/generate-text";
 
     try {
         const response = await fetch(serviceUrl, {
