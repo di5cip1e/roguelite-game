@@ -689,3 +689,29 @@ input:checked + .slider:before { transform: translateX(32px); background: linear
 #profileContent h4 {
     color: #ff4081; /* Sets headers to your theme's pink color for emphasis */
 }
+/* --- NEW START MENU STYLES --- */
+#startMenuCtn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.menu-title {
+    font-size: 3em;
+    margin-bottom: 2rem;
+}
+
+.menu-buttons button {
+    font-size: 1.5em;
+    padding: 1rem 2rem;
+    margin: 0 1rem;
+    width: auto; /* Override default button width */
+}
+
+/* Helper class to hide elements */
+.hidden {
+    display: none !important;
+}

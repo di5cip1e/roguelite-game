@@ -9,14 +9,37 @@ import { initCombat, performCombatAction } from './systems/combat.js';
 import { initDiceSystem, rollTheBones, continueAfterRoll } from './systems/dice.js';
 import { makeChoice, makeCustomChoice } from './systems/game-loop.js';
 import { initMapSystem, travelToLocation, selectPath } from './systems/map.js';
-import { initSettings, showDisplaySettings } from './systems/settings.js';
+import { initSettings } from './systems/settings.js';
 import { handleDialogueChoice } from './systems/dialogue.js';
 
 // --- Import UI Modules ---
 import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from './ui.js';
 
+// --- NEW MENU FUNCTIONS ---
+function newGame() {
+    // Hide the start menu
+    document.getElementById('startMenuCtn').classList.add('hidden');
+    // Show the main game container
+    document.getElementById('gameCtn').classList.remove('hidden');
+
+    // Now, show the character creation screen to start the game
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+        profileModal.classList.add('active');
+    }
+}
+
+// THIS FUNCTION WAS MISSING
+function continueGame() {
+    // This is a placeholder for future save/load functionality
+    alert("Continue game feature is not yet implemented.");
+}
+
+
 // --- Global Function Exposure ---
 // This section makes the modular functions "public" so the HTML onclick attributes can find them.
+window.newGame = newGame;
+window.continueGame = continueGame;
 window.saveProfile = saveProfile;
 window.restartGame = restartGame;
 window.makeChoice = makeChoice;
@@ -46,12 +69,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initMapSystem();
     initSettings();
     initTTS();
-
-    // Show the profile modal to start the character creation process
-    const profileModal = document.getElementById('profileModal');
-    if (profileModal) {
-        profileModal.classList.add('active');
-    } else {
-        console.error("Profile modal not found! Game cannot start.");
-    }
+    // THE EXTRA BRACE '}' WAS REMOVED FROM HERE
 });
