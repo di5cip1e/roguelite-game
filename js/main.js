@@ -15,9 +15,10 @@ import { initSettings, showDisplaySettings } from './systems/settings.js';
 import { toggleGameMenu, showFeature, showDiceRoller, initTTS, toggleTTS } from './ui.js';
 
 // --- Global Function Exposure ---
-// This is the CRITICAL part. It makes the functions available to the HTML.
+// This section makes the modular functions "public" so the HTML onclick attributes can find them.
 window.saveProfile = saveProfile;
 window.restartGame = restartGame;
+window.makeChoice = makeChoice; // <--- THIS IS THE NEWLY ADDED LINE
 window.makeCustomChoice = makeCustomChoice;
 window.performCombatAction = performCombatAction;
 window.useClassAbility = useClassAbility;
@@ -32,12 +33,8 @@ window.generateImageFromText = generateImageFromText;
 window.generateTextFromImage = generateTextFromImage;
 window.toggleTTS = toggleTTS;
 
-// These functions are attached to buttons that are created dynamically by other scripts,
-// so they don't need to be on the window object.
-// We just need to make sure the scripts that create the buttons import them correctly.
-// For example, game-loop.js creates choice buttons and assigns makeChoice to their onclick.
-
 // --- Game Initialization ---
+// This event listener waits for the HTML document to be fully loaded before running any scripts.
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize all the different systems
     initCharacterCreation();
