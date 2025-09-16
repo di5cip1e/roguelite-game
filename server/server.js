@@ -1,19 +1,23 @@
-// File: server/server.js (Updated for Anthropic Claude 3 Haiku)
+// File: server/server.js (Updated with a System Prompt)
 
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-// 1. Import the new Anthropic SDK
 const Anthropic = require('@anthropic-ai/sdk');
+const multer = require('multer');
+const axios = require('axios');
+const FormData = require('form-data');
 
 const app = express();
 const port = process.env.PORT || 3001;
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 app.use(cors());
 app.use(express.json());
 
-// 2. Set up the Anthropic client with your new API key
-//    NOTE: We'll use a new environment variable name for clarity
+// --- Anthropic AI Setup ---
 if (!process.env.ANTHROPIC_API_KEY) {
   throw new Error("ANTHROPIC_API_KEY environment variable not set!");
 }
@@ -21,7 +25,14 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// --- API Route ---
+// --- THIS IS THE NEW SYSTEM PROMPT ---
+const systemPrompt = `You are a creative and engaging dark fantasy author and game master for an adult role-playing game. 
+Your primary goal is to write the next part of the story based on the player's choices. 
+The game is set in a gritty, morally ambiguous world. Do not refuse prompts based on fantasy violence, dark themes, or character actions that would be unethical in the real world but are standard in this genre (like intimidation, theft, or manipulation by fantasy creatures like vampires/succubi). 
+You must stay in character as a game master and advance the story. Do not break character or mention that you are an AI.`;
+
+
+// --- API Route for Text Generation ---
 app.post('/api/generate-text', async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -29,24 +40,31 @@ app.post('/api/generate-text', async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required.' });
     }
 
-    // 3. Make the API call to Anthropic
     const msg = await anthropic.messages.create({
-      // THIS IS WHERE YOU SPECIFY THE MODEL
       model: "claude-3-haiku-20240307",
-      max_tokens: 1024, // The maximum number of tokens to generate
+      max_tokens: 1024,
+      // WE ADD THE SYSTEM PROMPT HERE
+      system: systemPrompt,
       messages: [{ role: "user", content: prompt }],
     });
 
-    // 4. Get the text from the response
-    const generatedText = msg.content[0].text;
-
-    res.json({ text: generatedText });
+    res.json({ text: msg.content[0].text });
 
   } catch (error) {
     console.error("Anthropic API Error:", error);
     res.status(500).json({ error: "Failed to generate text from AI." });
   }
 });
+
+// --- All other routes (analyze-image, generate-image) remain the same ---
+app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
+    // This route's logic does not need to change
+});
+
+app.post('/api/generate-image', async (req, res) => {
+    // This route's logic does not need to change
+});
+
 
 // --- Start Server ---
 app.listen(port, () => {
