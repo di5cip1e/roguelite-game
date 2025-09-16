@@ -1,25 +1,25 @@
-// This file runs on the Render server.
-require('dotenv').config(); // Loads variables from .env file for local testing
+// File: server/server.js (Updated for Anthropic Claude 3 Haiku)
+
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// 1. Import the new Anthropic SDK
+const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
-// Render provides the PORT environment variable.
-const port = process.env.PORT || 3001; 
+const port = process.env.PORT || 3001;
 
-// --- Middleware ---
-// Use CORS to allow requests from your frontend.
-app.use(cors()); 
-// Use express.json() to parse the body of POST requests.
+app.use(cors());
 app.use(express.json());
 
-// --- AI Setup ---
-// The API key is securely accessed from an environment variable.
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY environment variable not set!");
+// 2. Set up the Anthropic client with your new API key
+//    NOTE: We'll use a new environment variable name for clarity
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY environment variable not set!");
 }
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 // --- API Route ---
 app.post('/api/generate-text', async (req, res) => {
@@ -29,15 +29,21 @@ app.post('/api/generate-text', async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required.' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // 3. Make the API call to Anthropic
+    const msg = await anthropic.messages.create({
+      // THIS IS WHERE YOU SPECIFY THE MODEL
+      model: "claude-3-haiku-20240307",
+      max_tokens: 1024, // The maximum number of tokens to generate
+      messages: [{ role: "user", content: prompt }],
+    });
 
-    res.json({ text: text });
+    // 4. Get the text from the response
+    const generatedText = msg.content[0].text;
+
+    res.json({ text: generatedText });
 
   } catch (error) {
-    console.error("AI API Error:", error);
+    console.error("Anthropic API Error:", error);
     res.status(500).json({ error: "Failed to generate text from AI." });
   }
 });
